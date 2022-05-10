@@ -33,7 +33,7 @@
       "metadata": {
         "description": "Location for Application Insights"
       },
-      "defaultValue": "[resourceGroup().location]",
+      "defaultValue": "centralindia",
     },
     "runtime": {
       "type": "string",
