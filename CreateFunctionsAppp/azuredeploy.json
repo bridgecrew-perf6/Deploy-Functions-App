@@ -57,9 +57,9 @@
   },
   "variables": {
     "functionAppName": "[concat(parameters('env'), parameters('appName'))]",
-    "hostingPlanName": "[concat(parameters('env'), parameters('appName'), '-appsvc')]",
-    "applicationInsightsName": "[concat(parameters('env'), parameters('appName'), '-appinst')]",
-    "storageAccountName": "[concat(uniqueString(resourceGroup().id), '-stacc')]",
+    "hostingPlanName": "[concat(parameters('env'), parameters('appName'), 'appsvc')]",
+    "applicationInsightsName": "[concat(parameters('env'), parameters('appName'), 'appinst')]",
+    "storageAccountName": "[concat(uniqueString(resourceGroup().id), 'stacc')]",
     "functionWorkerRuntime": "[parameters('runtime')]"
   },
   "resources": [
