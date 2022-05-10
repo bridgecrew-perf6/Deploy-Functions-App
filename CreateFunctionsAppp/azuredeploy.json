@@ -28,12 +28,6 @@
         "description": "Location for all resources."
       }
     },
-    "appInsightsLocation": {
-      "type": "string",
-      "metadata": {
-        "description": "Location for Application Insights"
-      }
-    },
     "runtime": {
       "type": "string",
       "defaultValue": "dotnet",
