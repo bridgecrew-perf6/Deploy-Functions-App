@@ -32,7 +32,8 @@
       "type": "string",
       "metadata": {
         "description": "Location for Application Insights"
-      }
+      },
+      "defaultValue": "[resourceGroup().location]",
     },
     "runtime": {
       "type": "string",
