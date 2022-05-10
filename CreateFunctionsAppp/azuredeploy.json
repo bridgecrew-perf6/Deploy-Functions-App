@@ -85,7 +85,9 @@
         "name": "Y1",
         "tier": "Dynamic"
       },
-      "properties": {}
+      "properties": {
+        "name": "[variables('hostingPlanName')]"
+      }
     },
     {
       "type": "Microsoft.Insights/components",
