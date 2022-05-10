@@ -40,8 +40,7 @@
       "defaultValue": "Central India",
       "metadata": {
         "description": "Location for Application Insights"
-      },
-      "defaultValue": "centralindia",
+      }
     },
     "runtime": {
       "type": "string",
