@@ -1,0 +1,24 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'Test-ARM-Pipeline-Connection'
+    subscriptionId: 'f7a2bdbc-dc8f-41a9-98d3-056db614672f'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'Deploy-Functions-App-RG'
+    location: 'West India'
+    templateLocation: 'URL of the file'
+    csmFileLink: 'https://raw.githubusercontent.com/vishalshitole/Deploy-Functions-App/main/CreateFunctionsAppp/azuredeploy.json'
+    deploymentMode: 'Incremental'
+    deploymentName: 'DeployAzureFunctionsApp'
