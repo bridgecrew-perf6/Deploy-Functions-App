@@ -20,5 +20,6 @@ steps:
     location: 'West India'
     templateLocation: 'URL of the file'
     csmFileLink: 'https://raw.githubusercontent.com/vishalshitole/Deploy-Functions-App/main/CreateFunctionsAppp/azuredeploy.json'
+    overrideParameters: '-appInsightsLocation centralindia'
     deploymentMode: 'Incremental'
     deploymentName: 'DeployAzureFunctionsApp'
