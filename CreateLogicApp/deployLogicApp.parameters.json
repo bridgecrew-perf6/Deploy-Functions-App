@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "logicAppName": {
+            "value": "Deploy-Connection-App"
+        },
+        "office365_1_Connection_Name": {
+            "value": "office365"
+        },
+        "office365_1_Connection_DisplayName": {
+            "value": "Office 365"
+        },
+        "sharepoint_Connection_Name": {
+            "value": "sharepointonline"
+        },
+        "sharepoint_Connection_DisplayName": {
+            "value": "SharePoint Online"
+        },
+        "central_Site": {
+            "value": "https://vgssoft.sharepoint.com/sites/TranslationServicesLogicApp"
+        },
+        "central_Library": {
+            "value": "Test"
+        },
+        "service_ClientId": {
+            "value": "69ba93f8-e728-41ed-b1de-a6f6a29b3503"
+        },
+        "service_ClientSecret": {
+            "value": "LIb8Q~CJCRobKy-pc3NfusZ1~49hJLbVazb~9clQ"
+        },
+        "service_TenantId": {
+            "value": "ebf37b6d-d33b-4202-9885-dde5175c31a4"
+        }
+    }
+}

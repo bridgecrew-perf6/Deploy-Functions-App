@@ -2,18 +2,18 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "env": {
+    "dotnetFunctionAppName": {
       "type": "string",
-      "defaultValue": "dev",
+      "defaultValue": "[concat('dotnet-fnapp-', uniqueString(resourceGroup().id))]",
       "metadata": {
-        "description": "description"
+        "description": "The name of the dotnet function app that you wish to create."
       }
     },
-    "appName": {
+    "nodeFunctionAppName": {
       "type": "string",
-      "defaultValue": "[concat('fnapp', uniqueString(resourceGroup().id))]",
+      "defaultValue": "[concat('node-fnapp-', uniqueString(resourceGroup().id))]",
       "metadata": {
-        "description": "The name of the function app that you wish to create."
+        "description": "The name of the node function app that you wish to create."
       }
     },
     "storageAccountType": {
@@ -42,9 +42,21 @@
         "description": "Location for Application Insights"
       }
     },
-    "runtime": {
+    "dotnetRuntime": {
       "type": "string",
       "defaultValue": "dotnet",
+      "allowedValues": [
+        "node",
+        "dotnet",
+        "java"
+      ],
+      "metadata": {
+        "description": "The language worker runtime to load in the function app."
+      }
+    },
+    "nodeRuntime": {
+      "type": "string",
+      "defaultValue": "node",
       "allowedValues": [
         "node",
         "dotnet",
@@ -56,11 +68,13 @@
     }
   },
   "variables": {
-    "functionAppName": "[concat(parameters('env'), parameters('appName'))]",
-    "hostingPlanName": "[concat(parameters('env'), parameters('appName'), 'appsvc')]",
-    "applicationInsightsName": "[concat(parameters('env'), parameters('appName'), 'appinst')]",
-    "storageAccountName": "[concat(uniqueString(resourceGroup().id), 'stacc')]",
-    "functionWorkerRuntime": "[parameters('runtime')]"
+    "dotnet-functionAppName": "[parameters('dotnetFunctionAppName')]",
+    "node-functionAppName": "[parameters('nodeFunctionAppName')]",
+    "hostingPlanName": "[parameters('dotnetFunctionAppName')]",
+    "applicationInsightsName": "[parameters('dotnetFunctionAppName')]",
+    "storageAccountName": "[concat(uniqueString(resourceGroup().id), 'store')]",
+    "dotnet-functionWorkerRuntime": "[parameters('dotnetRuntime')]",
+    "node-functionWorkerRuntime": "[parameters('nodeRuntime')]"
   },
   "resources": [
     {
@@ -103,7 +117,7 @@
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2021-03-01",
-      "name": "[variables('functionAppName')]",
+      "name": "[variables('dotnet-functionAppName')]",
       "location": "[parameters('location')]",
       "kind": "functionapp",
       "identity": {
@@ -123,7 +137,7 @@
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
-              "value": "[toLower(variables('functionAppName'))]"
+              "value": "[toLower(variables('dotnet-functionAppName'))]"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -135,7 +149,60 @@
             },
             {
               "name": "FUNCTIONS_WORKER_RUNTIME",
-              "value": "[variables('functionWorkerRuntime')]"
+              "value": "[variables('dotnet-functionWorkerRuntime')]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName')), '2015-05-01').ConnectionString]"
+            }
+          ],
+          "ftpsState": "FtpsOnly",
+          "minTlsVersion": "1.2"
+        },
+        "httpsOnly": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2021-03-01",
+      "name": "[variables('node-functionAppName')]",
+      "location": "[parameters('location')]",
+      "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[toLower(variables('node-functionAppName'))]"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "[variables('node-functionWorkerRuntime')]"
             },
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
@@ -153,5 +220,15 @@
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ]
     }
-  ]
+  ],
+  "outputs": {
+    "dotnetAzureFunctionAppName": {
+      "type": "string",
+      "value": "[parameters('dotnetFunctionAppName')]"
+    },
+    "nodeAzureFunctionAppName": {
+      "type": "string",
+      "value": "[parameters('nodeFunctionAppName')]"
+    }
+  }
 }

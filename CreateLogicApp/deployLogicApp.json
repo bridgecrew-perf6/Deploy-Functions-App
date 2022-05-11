@@ -1,0 +1,238 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logicAppName": {
+      "type": "string",
+      "metadata": {
+        "description": "description"
+      },
+      "defaultValue": "Deploy-Connection-App"
+    },
+    "office365_1_Connection_Name": {
+      "type": "string",
+      "metadata": {
+        "description": "description"
+      },
+      "defaultValue": "office365"
+    },
+    "office365_1_Connection_DisplayName": {
+      "type": "string",
+      "metadata": {
+        "description": "description"
+      },
+      "defaultValue": "Office 365"
+    },
+    "sharepoint_Connection_Name": {
+        "type": "string",
+        "metadata": {
+            "description": "description"
+        },
+        "defaultValue": "sharepointonline"
+    },
+    "sharepoint_Connection_DisplayName": {
+        "type": "string",
+        "metadata": {
+            "description": "description"
+        },
+        "defaultValue": "SharePoint Online"
+    },
+    "central_Site": {
+      "type": "string",
+      "metadata": {
+        "description": "description"
+      },
+      "defaultValue": "https://vgssoft.sharepoint.com/sites/TranslationServicesLogicApp"
+    },
+    "central_Library": {
+      "type": "string",
+      "metadata": {
+        "description": "description"
+      },
+      "defaultValue": "Test"
+    },
+    "service_ClientId": {
+        "type": "string",
+        "metadata": {
+            "description": "description"
+        },
+        "defaultValue": "69ba93f8-e728-41ed-b1de-a6f6a29b3503"
+    },
+    "service_ClientSecret": {
+        "type": "string",
+        "metadata": {
+            "description": "description"
+        },
+        "defaultValue": "LIb8Q~CJCRobKy-pc3NfusZ1~49hJLbVazb~9clQ"
+    },
+    "service_TenantId": {
+        "type": "string",
+        "metadata": {
+            "description": "description"
+        },
+        "defaultValue": "ebf37b6d-d33b-4202-9885-dde5175c31a4"
+    }
+  },
+  "functions": [],
+  "variables": {},
+  "resources": [
+    {
+      "name": "[parameters('logicAppName')]",
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "definition": {
+          "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            },
+            "Library": {
+                "defaultValue": "[parameters('central_Library')]",
+                "type": "String"
+            },
+            "Site Url": {
+                "defaultValue": "[parameters('central_Site')]",
+                "type": "String"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "frequency": "Month",
+                    "interval": 3
+                },
+                "evaluatedRecurrence": {
+                    "frequency": "Month",
+                    "interval": 3
+                },
+                "type": "Recurrence"
+            }
+        },
+        "actions": {
+            "Random_number": {
+                "runAfter": {},
+                "type": "Compose",
+                "inputs": "@rand(10, 100)"
+            },
+            "Send_an_email_(V2)": {
+                "runAfter": {
+                    "Update_item": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                    "body": {
+                        "Body": "<p>Random number value updated in SharePoint.</p>",
+                        "Subject": "Random number updated",
+                        "To": "vishalshitole@vgssoft.onmicrosoft.com"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/v2/Mail"
+                }
+            },
+            "Update_item": {
+                "runAfter": {
+                    "Random_number": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                    "body": {
+                        "Value": "@outputs('Random_number')"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "patch",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('Site Url')))}/tables/@{encodeURIComponent(encodeURIComponent(parameters('Library')))}/items/@{encodeURIComponent('1')}"
+                }
+            },
+            "Get_item": {
+                "runAfter": {
+                    "Send_an_email_(V2)": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent(parameters('Site Url')))}/tables/@{encodeURIComponent(encodeURIComponent(parameters('Library')))}/items/@{encodeURIComponent('2')}"
+                }
+            }
+        },
+        "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+              "value": {
+                  "office365": {
+                      "connectionId": "[resourceId('Microsoft.Web/connections', parameters('office365_1_Connection_Name'))]",
+                      "connectionName": "[parameters('office365_1_Connection_Name')]",
+                      "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'office365')]"
+                  },
+                  "sharepointonline": {
+                        "connectionId": "[resourceId('Microsoft.Web/connections', parameters('sharepoint_Connection_Name'))]",
+                        "connectionName": "sharepointonline",
+                        "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', 'sharepointonline')]"
+                    }
+              }
+          }
+        }
+      },
+      "dependsOn": [
+          "[resourceId('Microsoft.Web/connections', parameters('office365_1_Connection_Name'))]",
+          "[resourceId('Microsoft.Web/connections', parameters('sharepoint_Connection_Name'))]"
+      ]
+    },
+    {
+        "type": "Microsoft.Web/connections",
+        "apiVersion": "2016-06-01",
+        // Template parameter reference for connection name
+        "name": "[parameters('office365_1_Connection_Name')]",
+        // Template parameter reference for connection resource location. Must match logic app location.
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "api": {
+              // Connector ID
+              "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', parameters('office365_1_Connection_Name'))]"
+          },
+          // Template parameter reference for connection display name
+          "displayName": "[parameters('office365_1_Connection_DisplayName')]"
+        }
+    },
+    {
+        "name": "[parameters('sharepoint_Connection_Name')]",
+        "type": "Microsoft.Web/connections",
+        "apiVersion": "2016-06-01",
+        "location": "[resourceGroup().location]",
+        "tags": {},
+        "properties": {
+            "displayName": "[parameters('sharepoint_Connection_DisplayName')]",
+            "customParameterValues": {},
+            "nonSecretParameterValues": {},
+            "api": {
+                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/', parameters('sharepoint_Connection_Name'))]"
+            }
+        }
+    }
+  ],
+  "outputs": {}
+}
